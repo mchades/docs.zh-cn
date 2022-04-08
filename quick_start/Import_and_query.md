@@ -82,6 +82,60 @@ select * from detailDemo order by mache_verson desc;
 
 StarRocks 支持多种 select 用法，包括：[Join](/sql-reference/sql-statements/data-manipulation/SELECT.md#%E8%BF%9E%E6%8E%A5join)，[子查询](/sql-reference/sql-statements/data-manipulation/SELECT.md#子查询)，[With 子表](/sql-reference/sql-statements/data-manipulation/SELECT.md#with%E5%AD%90%E5%8F%A5) 等，详见 [查询章节](/sql-reference/sql-statements/data-manipulation/SELECT.md)。
 
+### HTTP 查询
+
+示例：通过 `fe_host:fe_http_port/api/sql` 进行查询
+
+```
+$ cat query.json
+{
+  "query" : "SELECT COUNT(*) FROM test WHERE foo = 'bar' AND dt > TIMESTAMP '2022-04-01 00:00:00'",
+  "context" : {
+    "query_timeout":25920
+  }
+}
+
+$ curl -XPOST -H'Content-Type: application/json' http://user:password@FE_IP:FE_HTTP_PORT/api/sql -d @query.json
+{
+    "meta": [
+        {
+            "name": "id",
+            "type": "BIGINT"
+        },
+        {
+            "name": "name",
+            "type": "VARCHAR(65535)"
+        }
+    ],
+    "data": [
+        {
+            "id": 1775172,
+            "name": "ming"
+        }
+    ],
+    "statistics": {
+        "scanRows": 1000,
+        "scanBytes": 12434,
+        "returnedRows": 1
+    }
+}
+
+```
+
+
+
+HTTP API `/api/sql `目前只支持 EXPLAIN, DESC, SHOW, SELECT 语句。
+
+```
+$ curl -XPOST 'FE_IP:FE_HTTP_PORT/api/sql' \
+--header 'Authorization: Basic cm9vdDo=' \
+--header 'Content-Type: application/json' \
+-d '{"query" : "DROP TABLE test"}'
+{"status":"FAILED","msg":"/api/sql only support SELECT, SHOW, EXPLAIN statement"}
+```
+
+
+
 ## 扩展内容
 
 ### 函数支持
